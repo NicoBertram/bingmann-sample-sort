@@ -80,9 +80,6 @@ static inline void bingmann_msd_CE0(string* strings, size_t n)
     delete[] sorted;
 }
 
-PSS_CONTESTANT(bingmann_msd_CE0, "bingmann/msd_CE0",
-               "bingmann/msd_CE0 (rantala CE0 baseline)")
-
 /******************************************************************************/
 
 template <typename StringSet>
@@ -138,9 +135,6 @@ static inline void bingmann_msd_CE0_generic(string* strings, size_t n)
         parallel_string_sorting::UCharStringSet(strings, strings + n), 0);
 }
 
-PSS_CONTESTANT(bingmann_msd_CE0_generic, "bingmann/msd_CE0_gen",
-               "bingmann/msd_CE0 generic (rantala CE baseline)")
-
 /******************************************************************************/
 
 static inline void
@@ -190,9 +184,6 @@ static inline void bingmann_msd_CE1(string* strings, size_t n)
     delete[] charcache;
     delete[] sorted;
 }
-
-PSS_CONTESTANT(bingmann_msd_CE1, "bingmann/msd_CE1",
-               "bingmann/msd_CE1 (with charcache, fused loop)")
 
 /******************************************************************************/
 
@@ -245,9 +236,6 @@ static inline void bingmann_msd_CE2(string* strings, size_t n)
     delete[] charcache;
     delete[] sorted;
 }
-
-PSS_CONTESTANT(bingmann_msd_CE2, "bingmann/msd_CE2",
-               "bingmann/msd_CE2 (with charcache, fissioned loop)")
 
 /******************************************************************************/
 
@@ -304,9 +292,6 @@ static inline void bingmann_msd_CE3(string* strings, size_t n)
     delete[] charcache;
     delete[] sorted;
 }
-
-PSS_CONTESTANT(bingmann_msd_CE3, "bingmann/msd_CE3",
-               "bingmann/msd_CE3 (with charcache, fissioned loop, 16-bit adaptive)")
 
 /******************************************************************************/
 // CI Variants
@@ -366,9 +351,6 @@ static inline void bingmann_msd_CI0(string* strings, size_t n)
 {
     msd_CI0(strings, n, 0);
 }
-
-PSS_CONTESTANT(bingmann_msd_CI0, "bingmann/msd_CI0",
-               "bingmann/msd_CI0 (in-place baseline)")
 
 /******************************************************************************/
 // msd_CI1
@@ -434,9 +416,6 @@ static inline void bingmann_msd_CI1(string* strings, size_t n)
     msd_CI1(strings, charcache, n, 0);
     delete[] charcache;
 }
-
-PSS_CONTESTANT(bingmann_msd_CI1, "bingmann/msd_CI1",
-               "bingmann/msd_CI1 (with charcache, fused loop)")
 
 /******************************************************************************/
 // msd_CI2
@@ -505,9 +484,6 @@ static inline void bingmann_msd_CI2(string* strings, size_t n)
     msd_CI2(strings, charcache, n, 0);
     delete[] charcache;
 }
-
-PSS_CONTESTANT(bingmann_msd_CI2, "bingmann/msd_CI2",
-               "bingmann/msd_CI2 (with charcache, fissioned loop)")
 
 static inline void msd_CI(string* strings, size_t n, size_t depth)
 {
@@ -603,9 +579,6 @@ static inline void bingmann_msd_CI2_generic(string* strings, size_t n)
         parallel_string_sorting::UCharStringSet(strings, strings + n), 0);
 }
 
-PSS_CONTESTANT(bingmann_msd_CI2_generic, "bingmann/msd_CI2_gen",
-               "bingmann/msd_CI2 generic (with charcache, fissioned loop)")
-
 /******************************************************************************/
 
 static inline
@@ -676,9 +649,6 @@ static inline void bingmann_msd_CI3(string* strings, size_t n)
     msd_CI3(strings, charcache, n, 0);
     delete[] charcache;
 }
-
-PSS_CONTESTANT(bingmann_msd_CI3, "bingmann/msd_CI3",
-               "bingmann/msd_CI3 (with charcache, fissioned loop, 16-bit adaptive)")
 
 /******************************************************************************/
 // Stack-Based Variants
@@ -756,9 +726,6 @@ bingmann_msd_CE0_sb(string* strings, size_t n)
 
     delete[] sorted;
 }
-
-PSS_CONTESTANT(bingmann_msd_CE0_sb, "bingmann/msd_CE0_sb",
-               "bingmann/msd_CE0_sb (CE0 stack-based)")
 
 /******************************************************************************/
 
@@ -849,9 +816,6 @@ bingmann_msd_CE2_sb(string* strings, size_t n)
     delete[] charcache;
     delete[] sorted;
 }
-
-PSS_CONTESTANT(bingmann_msd_CE2_sb, "bingmann/msd_CE2_sb",
-               "bingmann/msd_CE2_sb (CE2 stack-based, charcache, fissioned loop)")
 
 /******************************************************************************/
 
@@ -954,9 +918,6 @@ bingmann_msd_CE3_sb(string* strings, size_t n)
     delete[] sorted;
 }
 
-PSS_CONTESTANT(bingmann_msd_CE3_sb, "bingmann/msd_CE3_sb",
-               "bingmann/msd_CE3_sb (CE3 stack-based, charcache, fissioned loop, 16-bit adaptive)")
-
 /******************************************************************************/
 
 struct RadixStep_CI2_sb
@@ -1053,9 +1014,6 @@ bingmann_msd_CI2_sb(string* strings, size_t n)
 
     delete[] charcache;
 }
-
-PSS_CONTESTANT(bingmann_msd_CI2_sb, "bingmann/msd_CI2_sb",
-               "bingmann/msd_CI2_sb (CI stack-based, charcache, fissioned)")
 
 /******************************************************************************/
 
@@ -1161,9 +1119,6 @@ bingmann_msd_CI3_sb(string* strings, size_t n)
 
     delete[] charcache;
 }
-
-PSS_CONTESTANT(bingmann_msd_CI3_sb, "bingmann/msd_CI3_sb",
-               "bingmann/msd_CI3_sb (CI stack-based, charcache, fissioned, 16-bit adaptive)")
 
 /******************************************************************************/
 

@@ -39,6 +39,7 @@
 #include <iostream>
 #include <thread>
 #include <iomanip>
+#include <atomic>
 
 #include <sys/wait.h>
 #include <sys/mman.h>
@@ -131,33 +132,9 @@ std::vector<size_t> g_numa_string_count;      // pointer to strings on NUMA node
 #include "tools/stringtools.hpp"
 
 #include "sequential/inssort.hpp"
-#include "sequential/bs-mkqs.hpp"
 
 #include "sequential/bingmann-radix_sort.hpp"
-#include "sequential/bingmann-mkqs.hpp"
 #include "sequential/bingmann-lcp_inssort.hpp"
-#include "sequential/bingmann-lcp_mergesort_binary.hpp"
-#include "sequential/bingmann-lcp_mergesort_kway.hpp"
-
-#include "parallel/eberle-ps5-parallel-toplevel-merge.hpp"
-#include "parallel/eberle-parallel-lcp-mergesort.hpp"
-
-#include "rantala/tools/debug.hpp"
-#include "rantala/tools/get_char.hpp"
-#include "rantala/tools/median.hpp"
-#include "rantala/tools/vector_malloc.hpp"
-#include "rantala/tools/vector_realloc.hpp"
-#include "rantala/tools/vector_block.hpp"
-#include "rantala/tools/vector_bagwell.hpp"
-#include "rantala/tools/vector_brodnik.hpp"
-#include "rantala/tools/insertion_sort.hpp"
-
-#include "rantala/msd_a.hpp"
-#include "rantala/msd_a2.hpp"
-#include "rantala/msd_ce.hpp"
-#include "rantala/msd_ci.hpp"
-#include "rantala/msd_dyn_block.hpp"
-#include "rantala/msd_dyn_vector.hpp"
 
 #undef debug
 

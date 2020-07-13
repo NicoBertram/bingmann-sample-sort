@@ -330,10 +330,6 @@ void test_lcp_insertion_sort(string* strings, uintptr_t* lcp, size_t n)
         lcp, (uint8_t*)(nullptr), /* depth */ 0);
 }
 
-PSS_CONTESTANT(test_lcp_insertion_sort,
-               "bingmann/lcp_insertion_sort",
-               "LCP-aware insertion sort")
-
 static inline
 void test_lcp_insertion_sort_pseudocode(string* strings, uintptr_t* lcp, size_t n)
 {
@@ -344,10 +340,6 @@ void test_lcp_insertion_sort_pseudocode(string* strings, uintptr_t* lcp, size_t 
 
     lcp_insertion_sort_pseudocode(strptr.active(), strptr.lcparray(), 0);
 }
-
-PSS_CONTESTANT(test_lcp_insertion_sort_pseudocode,
-               "bingmann/lcp_insertion_sort_pseudocode",
-               "LCP-aware insertion sort close to pseudo-code, with checking")
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -376,10 +368,6 @@ void lcp_insertion_sort_cache(
         parallel_string_sorting::UCharStringSet(strings, strings + n),
         lcp, cache, /* depth */ 0);
 }
-
-PSS_CONTESTANT(lcp_insertion_sort_cache,
-               "bingmann/lcp_insertion_sort_cache",
-               "LCP-aware insertion sort (with distinguishing character cache)")
 
 } // namespace bingmann
 

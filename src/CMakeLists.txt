@@ -11,46 +11,17 @@ include_directories("${NUMA_INCLUDE_DIR}")
 
 set(PSSLIB_SOURCES
   tools/globals.cpp
-  sequential/bingmann-lcp_mergesort_kway.cpp
-  sequential/bingmann-stdsort.cpp
   sequential/bingmann-sample_sort.cpp
   sequential/bingmann-sample_sortBS.cpp
   sequential/bingmann-sample_sortBSC.cpp
   sequential/bingmann-sample_sortBT.cpp
   sequential/bingmann-sample_sortRBTCE.cpp
-  sequential/mbm-radix.cpp
-  sequential/ng-cradix-rantala.cpp
-  sequential/ng-cradix.cpp
-  sequential/ng-lcpmergesort.cpp
-  sequential/nilsson-adaptive.cpp
-  sequential/nilsson-forward16.cpp
-  sequential/nilsson-forward8.cpp
-  sequential/sinha-burstsortA.cpp
-  sequential/sinha-burstsortL.cpp
-  rantala/burstsort.cpp
-  rantala/burstsort2.cpp
-  rantala/burstsort_mkq.cpp
-  rantala/funnelsort.cpp
-  rantala/mergesort.cpp
-  rantala/mergesort_lcp.cpp
-  rantala/mergesort_losertree.cpp
-  rantala/mergesort_unstable.cpp
-  rantala/multikey_block.cpp
-  rantala/multikey_cache.cpp
-  rantala/multikey_dynamic.cpp
-  rantala/multikey_multipivot.cpp
-  rantala/multikey_simd.cpp
-  parallel/akiba-parallel_string_radix_sort.cpp
-  parallel/bingmann-parallel_radix_sort.cpp
   parallel/bingmann-parallel_sample_sort.cpp
-  parallel/bingmann-parallel_mkqs.cpp
-  parallel/shamsundar-lcp-merge-string-sort.cpp
   )
 
 set(PSSBIN_SOURCES
   psstest.cpp
   ${PSSLIB_SOURCES}
-  sinha-copy-burstsort/glue.cpp
   )
 
 set(PSSBIN_LIBRARIES ${TBB_LIBRARIES} ${GMP_LIBRARIES} ${NUMA_LIBRARIES} tlx rt dl)

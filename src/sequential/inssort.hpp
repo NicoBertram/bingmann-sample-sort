@@ -54,8 +54,6 @@ static inline
 void insertion_sort(string* a, size_t n)
 { inssort(a, n, 0); }
 
-PSS_CONTESTANT(insertion_sort, "insertion_sort", "String Insertion-Sort")
-
 /******************************************************************************/
 
 //! Generic insertion sort for objectified string sets
@@ -101,9 +99,6 @@ void insertion_sort_generic(string* a, size_t n)
 {
     inssort_generic(parallel_string_sorting::UCharStringSet(a, a + n), 0);
 }
-
-PSS_CONTESTANT(insertion_sort_generic, "insertion_sort_gen",
-               "String Insertion-Sort generic")
 
 /******************************************************************************/
 
