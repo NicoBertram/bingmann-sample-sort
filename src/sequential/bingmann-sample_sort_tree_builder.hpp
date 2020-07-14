@@ -41,23 +41,14 @@ public:
         const key_type* samples, size_t samplesize)
     {
         const size_t oversample_factor = samplesize / numsplitters;
-        LOGC(debug_splitter) << "oversample_factor: " << oversample_factor;
 
-        LOGC(debug_splitter) << "splitter:";
         splitter_lcp[0] = 0; // sentinel for first < everything bucket
         for (size_t i = 0, j = oversample_factor / 2; i < numsplitters; ++i)
         {
             splitter[i] = samples[j];
-            LOGC(debug_splitter) << "key " << tlx::hexdump_type(splitter[i]);
 
             if (i != 0) {
                 key_type xorSplit = splitter[i - 1] ^ splitter[i];
-
-                LOGC(debug_splitter)
-                    << "    XOR -> " << tlx::hexdump_type(xorSplit)
-                    << " - " << count_high_zero_bits(xorSplit)
-                    << " bits = " << count_high_zero_bits(xorSplit) / 8
-                    << " chars lcp";
 
                 splitter_lcp[i] = count_high_zero_bits(xorSplit) / 8;
             }
@@ -112,16 +103,8 @@ public:
     key_type recurse(const key_type* lo, const key_type* hi,
                      unsigned int treeidx, key_type& rec_prevkey)
     {
-        LOGC(debug_splitter)
-            << "rec_buildtree(" << snum(lo) << "," << snum(hi)
-            << ", treeidx=" << treeidx << ")";
-
         // pick middle element as splitter
         const key_type* mid = lo + (ptrdiff_t)(hi - lo) / 2;
-
-        LOGC(debug_splitter)
-            << "tree[" << treeidx << "] = samples[" << snum(mid) << "] = "
-            << tlx::hexdump_type(*mid);
 
         key_type mykey = m_tree[treeidx] = *mid;
 #if 1
@@ -130,9 +113,6 @@ public:
 
         const key_type* midhi = mid;
         while (midhi + 1 < hi && *midhi == mykey) midhi++;
-
-        if (midhi - midlo > 1)
-            LOG0 << "key range = [" << snum(midlo) << "," << snum(midhi) << ")";
 #else
         const key_type* midlo = mid, * midhi = mid + 1;
 #endif
@@ -141,14 +121,6 @@ public:
             key_type prevkey = recurse(lo, midlo, 2 * treeidx + 0, rec_prevkey);
 
             key_type xorSplit = prevkey ^ mykey;
-
-            LOGC(debug_splitter)
-                << "    lcp: " << tlx::hexdump_type(prevkey)
-                << " XOR " << tlx::hexdump_type(mykey)
-                << " = " << tlx::hexdump_type(xorSplit)
-                << " - " << count_high_zero_bits(xorSplit)
-                << " bits = " << count_high_zero_bits(xorSplit) / 8
-                << " chars lcp";
 
             *m_splitter++ = mykey;
 
@@ -162,14 +134,6 @@ public:
         else
         {
             key_type xorSplit = rec_prevkey ^ mykey;
-
-            LOGC(debug_splitter)
-                << "    lcp: " << tlx::hexdump_type(rec_prevkey)
-                << " XOR " << tlx::hexdump_type(mykey)
-                << " = " << tlx::hexdump_type(xorSplit)
-                << " - " << count_high_zero_bits(xorSplit)
-                << " bits = " << count_high_zero_bits(xorSplit) / 8
-                << " chars lcp";
 
             *m_splitter++ = mykey;
 
@@ -220,16 +184,8 @@ public:
     key_type recurse(const key_type* lo, const key_type* hi,
                      unsigned int treeidx, key_type& rec_prevkey)
     {
-        LOGC(debug_splitter)
-            << "rec_buildtree(" << snum(lo) << "," << snum(hi)
-            << ", treeidx=" << treeidx << ")";
-
         // pick middle element as splitter
         const key_type* mid = lo + (ptrdiff_t)(hi - lo) / 2;
-
-        LOGC(debug_splitter)
-            << "tree[" << treeidx << "] = samples[" << snum(mid) << "] = "
-            << tlx::hexdump_type(*mid);
 
         key_type mykey = m_tree[treeidx] = *mid;
 #if 1
@@ -238,9 +194,6 @@ public:
 
         const key_type* midhi = mid;
         while (midhi + 1 < hi && *midhi == mykey) midhi++;
-
-        if (midhi - midlo > 1)
-            LOG0 << "key range = [" << snum(midlo) << "," << snum(midhi) << ")";
 #else
         const key_type* midlo = mid, * midhi = mid + 1;
 #endif
@@ -249,14 +202,6 @@ public:
             key_type prevkey = recurse(lo, midlo, 2 * treeidx + 0, rec_prevkey);
 
             key_type xorSplit = prevkey ^ mykey;
-
-            LOGC(debug_splitter)
-                << "    lcp: " << tlx::hexdump_type(prevkey)
-                << " XOR " << tlx::hexdump_type(mykey)
-                << " = " << tlx::hexdump_type(xorSplit)
-                << " - " << count_high_zero_bits(xorSplit)
-                << " bits = " << count_high_zero_bits(xorSplit) / 8
-                << " chars lcp";
 
             *m_lcp_iter++ =
                 (count_high_zero_bits(xorSplit) / 8) |
@@ -268,14 +213,6 @@ public:
         else
         {
             key_type xorSplit = rec_prevkey ^ mykey;
-
-            LOGC(debug_splitter)
-                << "    lcp: " << tlx::hexdump_type(rec_prevkey)
-                << " XOR " << tlx::hexdump_type(mykey)
-                << " = " << tlx::hexdump_type(xorSplit)
-                << " - " << count_high_zero_bits(xorSplit)
-                << " bits = " << count_high_zero_bits(xorSplit) / 8
-                << " chars lcp";
 
             *m_lcp_iter++ =
                 (count_high_zero_bits(xorSplit) / 8) |

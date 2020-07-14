@@ -41,17 +41,11 @@ void sample_sort_generic(string* strings, size_t n, size_t depth)
 {
     if (n < g_samplesort_smallsort)
     {
-        g_rs_steps++;
-        g_timer.change(TM_SMALLSORT);
         sample_sort_small_sort(strings, n, depth);
-        g_timer.change(TM_GENERAL);
         return;
     }
-    g_ss_steps++;
 
     // step 1: select splitters with oversampling
-    g_timer.change(TM_MAKE_SAMPLE);
-
     const size_t numsplitters = Classify::numsplitters;
     const size_t samplesize = oversample_factor * numsplitters;
 
@@ -64,16 +58,12 @@ void sample_sort_generic(string* strings, size_t n, size_t depth)
 
     std::sort(samples, samples + samplesize);
 
-    g_timer.change(TM_MAKE_SPLITTER);
-
     Classify* classifier = new Classify;
     unsigned char* splitter_lcp = new unsigned char[numsplitters + 1];
 
     classifier->build(samples, samplesize, splitter_lcp);
 
     // step 2.2: classify all strings and count bucket sizes
-    g_timer.change(TM_CLASSIFY);
-
     uint16_t* bktcache = new uint16_t[n];
 
     static const size_t bktnum = 2 * numsplitters + 1;
@@ -86,18 +76,7 @@ void sample_sort_generic(string* strings, size_t n, size_t depth)
     for (size_t si = 0; si < n; ++si)
         ++bktsize[bktcache[si]];
 
-    if (debug_bucketsize)
-    {
-        LOG1 << "bktsize: ";
-        for (size_t i = 0; i < bktnum; ++i)
-        {
-            LOG1 << bktsize[i];
-        }
-    }
-
     // step 3: prefix sum
-    g_timer.change(TM_PREFIXSUM);
-
     size_t bktindex[bktnum];
     bktindex[0] = bktsize[0];
     size_t last_bkt_size = bktsize[0];
@@ -108,8 +87,6 @@ void sample_sort_generic(string* strings, size_t n, size_t depth)
     assert(bktindex[bktnum - 1] == n);
 
     // step 4: premute in-place
-    g_timer.change(TM_PERMUTE);
-
     for (size_t i = 0, j; i < n - last_bkt_size; )
     {
         string perm = strings[i];
@@ -128,19 +105,12 @@ void sample_sort_generic(string* strings, size_t n, size_t depth)
     delete[] bktcache;
 
     // step 5: recursion
-    g_timer.change(TM_GENERAL);
-
     size_t i = 0, bsum = 0;
     while (i < bktnum - 1)
     {
         // i is even -> bkt[i] is less-than bucket
         if (bktsize[i] > 1)
         {
-            LOGC(debug_recursion)
-                << "Recurse[" << depth << "]: < bkt " << bsum
-                << " size " << bktsize[i]
-                << " lcp " << int(splitter_lcp[i / 2] & 0x7F);
-
             if (!g_toplevel_only)
                 sample_sort_generic<Classify>(
                     strings + bsum, bktsize[i],
@@ -151,17 +121,8 @@ void sample_sort_generic(string* strings, size_t n, size_t depth)
         // i is odd -> bkt[i] is equal bucket
         if (bktsize[i] > 1)
         {
-            if (splitter_lcp[i / 2] & 0x80) {
-                // equal-bucket has NULL-terminated key, done.
-                LOGC(debug_recursion)
-                    << "Recurse[" << depth << "]: = bkt " << bsum
-                    << " size " << bktsize[i] << " is done!";
-            }
+            if (splitter_lcp[i / 2] & 0x80) {  }
             else {
-                LOGC(debug_recursion)
-                    << "Recurse[" << depth << "]: = bkt " << bsum
-                    << " size " << bktsize[i] << " lcp keydepth!";
-
                 if (!g_toplevel_only)
                     sample_sort_generic<Classify>(
                         strings + bsum, bktsize[i], depth + sizeof(key_type));
@@ -171,10 +132,6 @@ void sample_sort_generic(string* strings, size_t n, size_t depth)
     }
     if (bktsize[i] > 0)
     {
-        LOGC(debug_recursion)
-            << "Recurse[" << depth << "]: > bkt " << bsum
-            << " size " << bktsize[i] << " no lcp";
-
         if (!g_toplevel_only)
             sample_sort_generic<Classify>(
                 strings + bsum, bktsize[i], depth);
@@ -192,10 +149,7 @@ void sample_sort_generic(string* strings, size_t n, size_t depth)
 void bingmann_sample_sortBSC(string* strings, size_t n)
 {
     using Classify = ClassifyBinarySearch<>;
-    sample_sort_pre();
-    g_stats >> "numsplitters" << size_t(Classify::numsplitters);
     sample_sort_generic<Classify>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(bingmann_sample_sortBSC, "bingmann/sample_sortBSC",
@@ -206,11 +160,7 @@ PSS_CONTESTANT(bingmann_sample_sortBSC, "bingmann/sample_sortBSC",
 void bingmann_sample_sortBTC(string* strings, size_t n)
 {
     using Classify = ClassifyTreeSimple<>;
-    sample_sort_pre();
-    g_stats >> "numsplitters" << size_t(Classify::numsplitters)
-        >> "splitter_treebits" << size_t(Classify::treebits);
     sample_sort_generic<Classify>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(bingmann_sample_sortBTC, "bingmann/sample_sortBTC",
@@ -219,11 +169,7 @@ PSS_CONTESTANT(bingmann_sample_sortBTC, "bingmann/sample_sortBTC",
 void bingmann_sample_sortBTCA(string* strings, size_t n)
 {
     using Classify = ClassifyTreeAssembler<>;
-    sample_sort_pre();
-    g_stats >> "numsplitters" << size_t(Classify::numsplitters)
-        >> "splitter_treebits" << size_t(Classify::treebits);
     sample_sort_generic<Classify>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(bingmann_sample_sortBTCA, "bingmann/sample_sortBTCA",
@@ -232,11 +178,7 @@ PSS_CONTESTANT(bingmann_sample_sortBTCA, "bingmann/sample_sortBTCA",
 void bingmann_sample_sortBTCU(string* strings, size_t n)
 {
     using Classify = ClassifyTreeUnroll<>;
-    sample_sort_pre();
-    g_stats >> "numsplitters" << size_t(Classify::numsplitters)
-        >> "splitter_treebits" << size_t(Classify::treebits);
     sample_sort_generic<Classify>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(bingmann_sample_sortBTCU, "bingmann/sample_sortBTCU",
@@ -245,11 +187,7 @@ PSS_CONTESTANT(bingmann_sample_sortBTCU, "bingmann/sample_sortBTCU",
 void bingmann_sample_sortBTCUI(string* strings, size_t n)
 {
     using Classify = ClassifyTreeUnrollInterleave<>;
-    sample_sort_pre();
-    g_stats >> "numsplitters" << size_t(Classify::numsplitters)
-        >> "splitter_treebits" << size_t(Classify::treebits);
     sample_sort_generic<Classify>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(bingmann_sample_sortBTCUI, "bingmann/sample_sortBTCUI",
@@ -260,11 +198,7 @@ PSS_CONTESTANT(bingmann_sample_sortBTCUI, "bingmann/sample_sortBTCUI",
 void bingmann_sample_sortBTCT(string* strings, size_t n)
 {
     using Classify = ClassifyTreeCalcSimple<>;
-    sample_sort_pre();
-    g_stats >> "numsplitters" << size_t(Classify::numsplitters)
-        >> "splitter_treebits" << size_t(Classify::treebits);
     sample_sort_generic<Classify>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(bingmann_sample_sortBTCT, "bingmann/sample_sortBTCT",
@@ -273,11 +207,7 @@ PSS_CONTESTANT(bingmann_sample_sortBTCT, "bingmann/sample_sortBTCT",
 void bingmann_sample_sortBTCTU(string* strings, size_t n)
 {
     using Classify = ClassifyTreeCalcUnroll<>;
-    sample_sort_pre();
-    g_stats >> "numsplitters" << size_t(Classify::numsplitters)
-        >> "splitter_treebits" << size_t(Classify::treebits);
     sample_sort_generic<Classify>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(bingmann_sample_sortBTCTU, "bingmann/sample_sortBTCTU",
@@ -286,11 +216,7 @@ PSS_CONTESTANT(bingmann_sample_sortBTCTU, "bingmann/sample_sortBTCTU",
 void bingmann_sample_sortBTCTUI(string* strings, size_t n)
 {
     using Classify = ClassifyTreeCalcUnrollInterleave<>;
-    sample_sort_pre();
-    g_stats >> "numsplitters" << size_t(Classify::numsplitters)
-        >> "splitter_treebits" << size_t(Classify::treebits);
     sample_sort_generic<Classify>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(bingmann_sample_sortBTCTUI, "bingmann/sample_sortBTCTUI",
@@ -301,11 +227,7 @@ PSS_CONTESTANT(bingmann_sample_sortBTCTUI, "bingmann/sample_sortBTCTUI",
 void bingmann_sample_sortBTCE(string* strings, size_t n)
 {
     using Classify = ClassifyEqual<>;
-    sample_sort_pre();
-    g_stats >> "numsplitters" << size_t(Classify::numsplitters)
-        >> "splitter_treebits" << size_t(Classify::treebits);
     sample_sort_generic<Classify>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(bingmann_sample_sortBTCE, "bingmann/sample_sortBTCE",
@@ -314,11 +236,7 @@ PSS_CONTESTANT(bingmann_sample_sortBTCE, "bingmann/sample_sortBTCE",
 void bingmann_sample_sortBTCEA(string* strings, size_t n)
 {
     using Classify = ClassifyEqualAssembler<>;
-    sample_sort_pre();
-    g_stats >> "numsplitters" << size_t(Classify::numsplitters)
-        >> "splitter_treebits" << size_t(Classify::treebits);
     sample_sort_generic<Classify>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(bingmann_sample_sortBTCEA, "bingmann/sample_sortBTCEA",
@@ -327,11 +245,7 @@ PSS_CONTESTANT(bingmann_sample_sortBTCEA, "bingmann/sample_sortBTCEA",
 void bingmann_sample_sortBTCEU(string* strings, size_t n)
 {
     using Classify = ClassifyEqualUnrollAssembler<>;
-    sample_sort_pre();
-    g_stats >> "numsplitters" << size_t(Classify::numsplitters)
-        >> "splitter_treebits" << size_t(Classify::treebits);
     sample_sort_generic<Classify>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(bingmann_sample_sortBTCEU, "bingmann/sample_sortBTCEU",
@@ -340,11 +254,7 @@ PSS_CONTESTANT(bingmann_sample_sortBTCEU, "bingmann/sample_sortBTCEU",
 void bingmann_sample_sortBTCEV(string* strings, size_t n)
 {
     using Classify = ClassifyEqualUnroll<>;
-    sample_sort_pre();
-    g_stats >> "numsplitters" << size_t(Classify::numsplitters)
-        >> "splitter_treebits" << size_t(Classify::treebits);
     sample_sort_generic<Classify>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(bingmann_sample_sortBTCEV, "bingmann/sample_sortBTCEV",
@@ -359,13 +269,7 @@ PSS_CONTESTANT(bingmann_sample_sortBTCEV, "bingmann/sample_sortBTCEV",
     void bingmann_sample_sortBTCUI ## I ## X ## X(string * strings, size_t n) \
     {                                                                         \
         using Classify = ClassifyTreeUnrollInterleave<X, I>;                  \
-        sample_sort_pre();                                                    \
-        g_stats >> "numsplitters" << size_t(Classify::numsplitters)           \
-            >> "splitter_treebits" << size_t(Classify::treebits)              \
-            >> "algobase" << "BTCUI"                                          \
-            >> "interleave" << size_t(I);                                     \
         sample_sort_generic<Classify>(strings, n, 0);                         \
-        sample_sort_post();                                                   \
     }                                                                         \
                                                                               \
     PSS_CONTESTANT(                                                           \
@@ -403,12 +307,7 @@ MAKE_BINGMANN_SAMPLE_SORT_BTCUIX_X(10)
     void bingmann_sample_sortBTCEUX ## X(string * strings, size_t n) \
     {                                                                \
         using Classify = ClassifyEqualUnroll<X>;                     \
-        sample_sort_pre();                                           \
-        g_stats >> "numsplitters" << size_t(Classify::numsplitters)  \
-            >> "splitter_treebits" << size_t(Classify::treebits)     \
-            >> "algobase" << "BTCEU";                                \
         sample_sort_generic<Classify>(strings, n, 0);                \
-        sample_sort_post();                                          \
     }                                                                \
                                                                      \
     PSS_CONTESTANT(                                                  \
@@ -434,13 +333,7 @@ MAKE_BINGMANN_SAMPLE_SORT_BTCEUX(15)
     void bingmann_sample_sortBTCTUI ## I ## X ## X(string * strings, size_t n) \
     {                                                                          \
         using Classify = ClassifyTreeCalcUnrollInterleave<X, I>;               \
-        sample_sort_pre();                                                     \
-        g_stats >> "numsplitters" << size_t(Classify::numsplitters)            \
-            >> "splitter_treebits" << size_t(Classify::treebits)               \
-            >> "algobase" << "BTCTUI"                                          \
-            >> "interleave" << size_t(I);                                      \
         sample_sort_generic<Classify>(strings, n, 0);                          \
-        sample_sort_post();                                                    \
     }                                                                          \
                                                                                \
     PSS_CONTESTANT(                                                            \

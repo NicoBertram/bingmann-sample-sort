@@ -167,10 +167,8 @@ void sample_sortBSC(string* strings, size_t n, size_t depth)
 
     if (n < g_samplesort_smallsort)
     {
-        g_rs_steps++;
         return sample_sort_small_sort(strings, n, depth);
     }
-    g_ss_steps++;
 
     //std::cout << "numsplitters: " << numsplitters << "\n";
 
@@ -222,13 +220,6 @@ void sample_sortBSC(string* strings, size_t n, size_t depth)
     for (size_t si = 0; si < n; ++si)
         ++bktsize[bktcache[si]];
 
-    if (debug_bucketsize)
-    {
-        LOG1 << "bktsize: ";
-        for (size_t i = 0; i < bktnum; ++i)
-            LOG1 << bktsize[i];
-    }
-
     // step 3: prefix sum
 
     size_t bktindex[bktnum];
@@ -267,11 +258,6 @@ void sample_sortBSC(string* strings, size_t n, size_t depth)
         // i is even -> bkt[i] is less-than bucket
         if (bktsize[i] > 1)
         {
-            LOGC(debug_recursion)
-                << "Recurse[" << depth << "]: < bkt " << bsum
-                << " size " << bktsize[i]
-                << " lcp " << int(splitter_lcp[i / 2]);
-
             if (!g_toplevel_only)
                 sample_sortBSC<find_bkt>(strings + bsum, bktsize[i],
                                          depth + splitter_lcp[i / 2]);
@@ -283,15 +269,8 @@ void sample_sortBSC(string* strings, size_t n, size_t depth)
         {
             if ((splitter[i / 2] & 0xFF) == 0) {
                 // equal-bucket has NULL-terminated key, done.
-                LOGC(debug_recursion)
-                    << "Recurse[" << depth << "]: = bkt " << bsum
-                    << " size " << bktsize[i] << " is done!";
             }
             else {
-                LOGC(debug_recursion)
-                    << "Recurse[" << depth << "]: = bkt " << bsum
-                    << " size " << bktsize[i] << " lcp keydepth!";
-
                 if (!g_toplevel_only)
                     sample_sortBSC<find_bkt>(strings + bsum, bktsize[i],
                                              depth + sizeof(key_type));
@@ -301,10 +280,6 @@ void sample_sortBSC(string* strings, size_t n, size_t depth)
     }
     if (bktsize[i] > 0)
     {
-        LOGC(debug_recursion)
-            << "Recurse[" << depth << "]: > bkt " << bsum
-            << " size " << bktsize[i] << " no lcp";
-
         if (!g_toplevel_only)
             sample_sortBSC<find_bkt>(strings + bsum, bktsize[i], depth);
     }
@@ -316,9 +291,7 @@ void sample_sortBSC(string* strings, size_t n, size_t depth)
 
 void bingmann_sample_sortBSC_original(string* strings, size_t n)
 {
-    sample_sort_pre();
     sample_sortBSC<find_bkt_binsearch>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(
@@ -328,9 +301,7 @@ PSS_CONTESTANT(
 
 void bingmann_sample_sortBSCA_original(string* strings, size_t n)
 {
-    sample_sort_pre();
     sample_sortBSC<find_bkt_assembler>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(
@@ -399,9 +370,7 @@ find_bkt_asmequal(const key_type& key, const key_type* splitter, size_t numsplit
 
 void bingmann_sample_sortBSCE_original(string* strings, size_t n)
 {
-    sample_sort_pre();
     bingmann_sample_sortBSC_original::sample_sortBSC<find_bkt_equal>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(
@@ -411,9 +380,7 @@ PSS_CONTESTANT(
 
 void bingmann_sample_sortBSCEA_original(string* strings, size_t n)
 {
-    sample_sort_pre();
     bingmann_sample_sortBSC_original::sample_sortBSC<find_bkt_asmequal>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(

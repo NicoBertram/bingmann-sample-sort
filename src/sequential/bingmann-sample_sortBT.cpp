@@ -113,12 +113,8 @@ void sample_sortBT(string* strings, size_t n, size_t depth)
 
     if (n < g_samplesort_smallsort)
     {
-        g_rs_steps++;
         return sample_sort_small_sort(strings, n, depth);
     }
-    g_ss_steps++;
-
-    //std::cout << "numsplitters: " << numsplitters << "\n";
 
     // step 1: select splitters with oversampling
 
@@ -138,22 +134,13 @@ void sample_sortBT(string* strings, size_t n, size_t depth)
     key_type splitter[numsplitters];
     unsigned char splitter_lcp[numsplitters + 1];
 
-    LOGC(debug_splitter) << "splitter:";
     splitter_lcp[0] = 0; // sentinel for first < everything bucket
     for (size_t i = 0, j = oversample_factor / 2; i < numsplitters; ++i)
     {
         splitter[i] = samples[j];
-        LOGC(debug_splitter)
-            << "key " << tlx::hexdump_type(splitter[i]);
 
         if (i != 0) {
             key_type xorSplit = splitter[i - 1] ^ splitter[i];
-
-            LOGC(debug_splitter)
-                << "    XOR -> " << tlx::hexdump_type(xorSplit) << " - "
-                << count_high_zero_bits(xorSplit)
-                << " bits = " << count_high_zero_bits(xorSplit) / 8
-                << " chars lcp";
 
             splitter_lcp[i] = count_high_zero_bits(xorSplit) / 8;
         }
@@ -173,15 +160,11 @@ void sample_sortBT(string* strings, size_t n, size_t depth)
 
         while (highbit > 0)
         {
-            LOGC(debug_splitter_tree) << "highbit = " << highbit;
-
             size_t p = highbit - 1;
             size_t inc = highbit << 1;
 
             while (p <= numsplitters)
             {
-                LOGC(debug_splitter_tree) << "p = " << p;
-
                 splitter_tree[t++] = splitter[p];
 
                 p += inc;
@@ -189,13 +172,6 @@ void sample_sortBT(string* strings, size_t n, size_t depth)
 
             highbit >>= 1;
         }
-    }
-
-    if (debug_splitter_tree)
-    {
-        LOG1 << "splitter_tree: ";
-        for (size_t i = 0; i < numsplitters; ++i)
-            LOG1 << splitter_tree[i];
     }
 
     // step 2.2: classify all strings and count bucket sizes
@@ -215,13 +191,6 @@ void sample_sortBT(string* strings, size_t n, size_t depth)
         assert(b < bktnum);
 
         ++bktsize[b];
-    }
-
-    if (debug_bucketsize)
-    {
-        LOG1 << "bktsize: ";
-        for (size_t i = 0; i < bktnum; ++i)
-            LOG1 << bktsize[i];
     }
 
     // step 3: prefix sum
@@ -268,11 +237,6 @@ void sample_sortBT(string* strings, size_t n, size_t depth)
         // i is even -> bkt[i] is less-than bucket
         if (bktsize[i] > 1)
         {
-            LOGC(debug_recursion)
-                << "Recurse[" << depth << "]: < bkt " << bsum
-                << " size " << bktsize[i]
-                << " lcp " << int(splitter_lcp[i / 2]);
-
             if (!g_toplevel_only)
                 sample_sortBT(strings + bsum, bktsize[i],
                               depth + splitter_lcp[i / 2]);
@@ -284,15 +248,8 @@ void sample_sortBT(string* strings, size_t n, size_t depth)
         {
             if ((splitter[i / 2] & 0xFF) == 0) {
                 // equal-bucket has NULL-terminated key, done.
-                LOGC(debug_recursion)
-                    << "Recurse[" << depth << "]: = bkt " << bsum
-                    << " size " << bktsize[i] << " is done!";
             }
             else {
-                LOGC(debug_recursion)
-                    << "Recurse[" << depth << "]: = bkt " << bsum
-                    << " size " << bktsize[i] << " lcp keydepth!";
-
                 if (!g_toplevel_only)
                     sample_sortBT(strings + bsum, bktsize[i],
                                   depth + sizeof(key_type));
@@ -302,10 +259,6 @@ void sample_sortBT(string* strings, size_t n, size_t depth)
     }
     if (bktsize[i] > 0)
     {
-        LOGC(debug_recursion)
-            << "Recurse[" << depth << "]: > bkt " << bsum
-            << " size " << bktsize[i] << " no lcp";
-
         if (!g_toplevel_only)
             sample_sortBT(strings + bsum, bktsize[i], depth);
     }
@@ -317,9 +270,7 @@ void sample_sortBT(string* strings, size_t n, size_t depth)
 
 void bingmann_sample_sortBT(string* strings, size_t n)
 {
-    sample_sort_pre();
     sample_sortBT(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(bingmann_sample_sortBT, "bingmann/sample_sortBT",

@@ -24,6 +24,12 @@
 #ifndef PSS_SRC_TOOLS_STRINGTOOLS_HEADER
 #define PSS_SRC_TOOLS_STRINGTOOLS_HEADER
 
+
+#include <fstream>
+#include <iomanip>
+#include <limits>
+#include <iostream>
+
 #include <cassert>
 #include <tlx/logger.hpp>
 
@@ -42,6 +48,7 @@ typedef unsigned int uint128_t __attribute__ ((mode(TI)));
 template <typename Type>
 static inline std::string toBinary(Type v, const int width = (1 << sizeof(Type)))
 {
+    std::cout << "a" << std::endl;
     char binstr[width + 1];
     binstr[width] = 0;
     for (int i = 0; i < width; i++) {
@@ -54,6 +61,7 @@ static inline std::string toBinary(Type v, const int width = (1 << sizeof(Type))
 /// compare strings by scanning
 static inline int scmp(const string _s1, const string _s2)
 {
+    std::cout << "b" << std::endl;
     string s1 = _s1, s2 = _s2;
 
     while (*s1 != 0 && *s1 == *s2)
@@ -65,6 +73,7 @@ static inline int scmp(const string _s1, const string _s2)
 static inline int
 scmp(const string _s1, const string _s2, size_t& lcp)
 {
+    std::cout << "c" << std::endl;
     string s1 = _s1 + lcp, s2 = _s2 + lcp;
 
     while (*s1 != 0 && *s1 == *s2)
@@ -75,6 +84,7 @@ scmp(const string _s1, const string _s2, size_t& lcp)
 /// calculate lcp by scanning
 static inline unsigned int calc_lcp(const string _s1, const string _s2)
 {
+    std::cout << "d" << std::endl;
     string s1 = _s1, s2 = _s2;
 
     size_t h = 0;
@@ -91,6 +101,7 @@ unsigned int calc_lcp(const StringSet& ss,
                       const typename StringSet::String& s1,
                       const typename StringSet::String& s2)
 {
+    std::cout << "e" << std::endl;
     typename StringSet::CharIterator c1 = ss.get_chars(s1, 0);
     typename StringSet::CharIterator c2 = ss.get_chars(s2, 0);
 
@@ -100,42 +111,6 @@ unsigned int calc_lcp(const StringSet& ss,
 
     return h;
 }
-
-/// Return traits of key_type
-template <typename CharT>
-class key_traits
-{ };
-
-template <>
-class key_traits<uint8_t>
-{
-public:
-    static const size_t radix = 256;
-    static const size_t add_depth = 1;
-};
-
-template <>
-class key_traits<uint16_t>
-{
-public:
-    static const size_t radix = 65536;
-    static const size_t add_depth = 2;
-};
-
-template <>
-class key_traits<uint32_t>
-{
-public:
-    static const size_t radix = 4294967296;
-    static const size_t add_depth = 4;
-};
-
-template <>
-class key_traits<uint64_t>
-{
-public:
-    static const size_t add_depth = 8;
-};
 
 /// get packed characters from string at certain depth, needed due to
 /// zero-termianted strings.
@@ -346,6 +321,7 @@ void
 calculateRanges(
     std::pair<size_t, size_t>* ranges, unsigned numberOfSplits, size_t lengthToSplit)
 {
+    std::cout << "p" << std::endl;
     const size_t split = lengthToSplit / numberOfSplits;
     for (unsigned i = 0; i < numberOfSplits - 1; ++i)
     {
@@ -366,65 +342,29 @@ struct TreeCalculations
     static inline unsigned int level_to_preorder(unsigned int id)
     {
         assert(id > 0);
-        LOG << "index: " << id << " = " << toBinary(id);
 
         static const int bitmask = numnodes;
 
         int hi = treebits - 32 + count_high_zero_bits<uint32_t>(id);
-        LOG << "high zero: " << hi;
 
         unsigned int bkt = ((id << (hi + 1)) & bitmask) | (1 << hi);
 
-        LOG << "bkt: " << bkt << " = " << toBinary(bkt);
         return bkt;
     }
 
     static inline unsigned int pre_to_levelorder(unsigned int id)
     {
         assert(id > 0);
-        LOG << "index: " << id << " = " << toBinary(id);
 
         static const int bitmask = numnodes;
 
         int lo = count_low_zero_bits<uint32_t>(id) + 1;
-        LOG << "low zero: " << lo;
 
         unsigned int bkt = ((id >> lo) & bitmask) | (1 << (treebits - lo));
 
-        LOG << "bkt: " << bkt << " = " << toBinary(bkt);
         return bkt;
     }
-
-    static inline void         self_verify()
-    {
-        for (size_t i = 1; i <= numnodes; ++i)
-        {
-            LOG1 << toBinary(i, treebits) << " -> ";
-
-            size_t id = level_to_preorder(i);
-            LOG1 << toBinary(id, treebits) << " -> ";
-
-            id = pre_to_levelorder(id);
-            LOG1 << toBinary(id, treebits);
-
-            LOG1 << "";
-            assert(id == i);
-        }
-    }
 };
-
-static inline void self_verify_tree_calculations()
-{
-    TreeCalculations<4>::self_verify();
-    TreeCalculations<5>::self_verify();
-    TreeCalculations<6>::self_verify();
-    TreeCalculations<11>::self_verify();
-    TreeCalculations<12>::self_verify();
-    TreeCalculations<13>::self_verify();
-    TreeCalculations<14>::self_verify();
-    TreeCalculations<15>::self_verify();
-    TreeCalculations<16>::self_verify();
-}
 
 } // namespace stringtools
 

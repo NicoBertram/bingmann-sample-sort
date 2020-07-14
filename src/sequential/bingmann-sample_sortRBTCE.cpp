@@ -87,10 +87,6 @@ public:
               m_strings(strings),
               m_depth(depth)
         {
-            size_t treenum = treelist.size() - 1;
-            LOGC(debug_splitter)
-                << "Builder for subtree[" << treenum << "] at depth " << depth;
-
             std::fill(st.splitter_subtree, st.splitter_subtree + numsplitters, 0);
 
             key_type sentinel = 0;
@@ -101,9 +97,6 @@ public:
 
             // overwrite sentinel lcp for first < everything bucket
             st.splitter_lcp[0] &= 0x80;
-
-            LOGC(debug_splitter)
-                << "done building subtree[" << treenum << "] at depth " << depth;
         }
 
         ptrdiff_t snum(samplepair_type* s) const
@@ -116,27 +109,14 @@ public:
         {
             key_type xorSplit = prevkey ^ mykey;
 
-            LOGC(debug_splitter)
-                << "    lcp: "
-                << tlx::hexdump_type(prevkey) << " XOR " << tlx::hexdump_type(mykey) << " = "
-                << tlx::hexdump_type(xorSplit) << " - " << count_high_zero_bits(xorSplit) << " bits = "
-                << count_high_zero_bits(xorSplit) / 8 << " chars lcp";
-
             *m_lcp_iter++ = (count_high_zero_bits(xorSplit) / 8) |
                             ((mykey & 0xFF) ? 0 : 0x80);  // marker for done splitters
-
-            LOGC(debug_splitter)
-                << "key range = [" << snum(midlo) << "," << snum(midhi) << ") - " << midhi - midlo;
 
             // decide whether to build a subtree:
             if (midhi - midlo >= (ptrdiff_t)(numsplitters / 2) // enough samples
                 && (mykey & 0xFF) != 0                         // key is not NULL-terminated
                 && m_treelist.size() < 255)                    // not too many subtrees
             {
-                LOGC(debug_subtree)
-                    << "creating subtree for equal range of key "
-                    << tlx::hexdump_type(mykey) << " with " << (midhi - midlo) << " samples";
-
                 for (samplepair_type* s = midlo; s < midhi; ++s)
                 {
                     size_t p = s->second;
@@ -150,9 +130,6 @@ public:
 
                 SplitterTree::Builder(*m_treelist.back(), midlo, midhi,
                                       m_treelist, m_strings, m_depth + sizeof(key_type));
-
-                LOGC(debug_splitter_subtree)
-                    << "done creating subtree " << int(*m_subtree_iter);
             }
             ++m_subtree_iter;
         }
@@ -160,16 +137,8 @@ public:
         key_type recurse(samplepair_type* lo, samplepair_type* hi, unsigned int treeidx,
                          key_type& rec_prevkey)
         {
-            LOGC(debug_splitter)
-                << "buildtree(" << snum(lo) << "," << snum(hi)
-                << ", treeidx=" << treeidx << ")";
-
             // pick middle element as splitter
             samplepair_type* mid = lo + (ptrdiff_t)(hi - lo) / 2;
-
-            LOGC(debug_splitter)
-                << "tree[" << treeidx << "] = samples[" << snum(mid) << "] = "
-                << tlx::hexdump_type(mid->first);
 
             key_type mykey = m_tree[treeidx] = mid->first;
 
@@ -178,9 +147,6 @@ public:
 
             samplepair_type* midhi = mid;
             while (midhi + 1 < hi && midhi->first == mykey) midhi++;
-
-            LOGC(debug_splitter)
-                << "key range = [" << snum(midlo) << "," << snum(midhi) << ")";
 
             if (2 * treeidx < numsplitters)
             {
@@ -214,18 +180,14 @@ public:
         unsigned int id, size_t treebits, size_t numsplitters)
     {
         assert(id > 0);
-        //std::cout << "index: " << id << " = " << binary(id) << "\n";
 
         //int treebits = 4;
         //int bitmask = ((1 << treebits)-1);
         static const int bitmask = numsplitters;
 
-        int hi = treebits - 32 + count_high_zero_bits<uint32_t>(id); // sdfsdf
-        //std::cout << "high zero: " << hi << "\n";
+        int hi = treebits - 32 + count_high_zero_bits<uint32_t>(id);
 
         unsigned int bkt = ((id << (hi + 1)) & bitmask) | (1 << hi);
-
-        //std::cout << "bkt: " << bkt << " = " << binary(bkt) << "\n";
 
         return bkt;
     }
@@ -314,8 +276,6 @@ public:
     void recursive_permute(string* strings, size_t n, uint16_t* bktcache,
                            string* sorted, std::vector<SplitterTree*>& treelist)
     {
-        LOGC(debug_recursion)
-            << "permuting " << n << " strings @ " << strings;
         // step 4: premute out-of-place
 
         for (size_t i = 0; i < n; ++i)
@@ -339,10 +299,6 @@ public:
             // i is odd -> bkt[i] is equal bucket
             if (splitter_subtree[i / 2])
             {
-                LOGC(debug_subtree)
-                    << "recursively permuting subtree "
-                    << int(splitter_subtree[i / 2]) << " @ bkt " << i;
-
                 assert(splitter_subtree[i / 2] < treelist.size());
                 SplitterTree& t = *treelist[splitter_subtree[i / 2]];
 
@@ -361,20 +317,12 @@ public:
         string* strings, size_t n,
         std::vector<SplitterTree*>& treelist, size_t depth)
     {
-        LOGC(debug_recursion)
-            << "sorting " << n << " strings @ " << strings << " in depth " << depth;
-
         size_t i = 0, bsum = 0;
         while (i < bktnum - 1)
         {
             // i is even -> bkt[i] is less-than bucket
             if (bktsize[i] > 1)
             {
-                LOGC(debug_recursion)
-                    << "Recurse[" << depth << "]: < bkt " << bsum
-                    << " size " << bktsize[i]
-                    << " lcp " << int(splitter_lcp[i / 2] & 0x7F);
-
                 if (!g_toplevel_only)
                     sort<find_bkt>(strings + bsum, bktsize[i],
                                    depth + (splitter_lcp[i / 2] & 0x7F));
@@ -386,29 +334,17 @@ public:
             {
                 if (splitter_lcp[i / 2] & 0x80) {
                     // equal-bucket has NULL-terminated key, done.
-                    LOGC(debug_recursion)
-                        << "Recurse[" << depth << "]: = bkt " << bsum
-                        << " size " << bktsize[i] << " is done!";
                 }
                 else if (splitter_subtree[i / 2])
                 {
                     assert(splitter_subtree[i / 2] < treelist.size());
                     SplitterTree& t = *treelist[splitter_subtree[i / 2]];
 
-                    LOGC(debug_recursion)
-                        << "Recurse[" << depth << "]: = bkt " << bsum
-                        << " size " << bktsize[i] << " lcp keydepth,"
-                        << " into subtree " << int(splitter_subtree[i / 2]);
-
                     t.recursive_sort<find_bkt>(
                         strings + bsum, bktsize[i], treelist,
                         depth + sizeof(key_type));
                 }
                 else {
-                    LOGC(debug_recursion)
-                        << "Recurse[" << depth << "]: = bkt " << bsum
-                        << " size " << bktsize[i] << " lcp keydepth!";
-
                     if (!g_toplevel_only)
                         sort<find_bkt>(strings + bsum, bktsize[i],
                                        depth + sizeof(key_type));
@@ -418,10 +354,6 @@ public:
         }
         if (bktsize[i] > 0)
         {
-            LOGC(debug_recursion)
-                << "Recurse[" << depth << "]: > bkt " << bsum
-                << " size " << bktsize[i] << " no lcp";
-
             if (!g_toplevel_only)
                 sort<find_bkt>(strings + bsum, bktsize[i], depth);
         }
@@ -438,19 +370,11 @@ public:
     {
         if (n < g_samplesort_smallsort)
         {
-            g_rs_steps++;
-            //return inssort::inssort(strings, n, depth);
-            //return bs_mkqs::ssort2(strings, n, depth);
-            g_timer.change(TM_SMALLSORT);
             sample_sort_small_sort(strings, n, depth);
-            g_timer.change(TM_GENERAL);
             return;
         }
-        g_ss_steps++;
 
         // step 1: select splitters with oversampling
-        g_timer.change(TM_MAKE_SAMPLE);
-
         //const size_t oversample_factor = 8;
         const size_t samplesize = oversample_factor * numsplitters;
 
@@ -467,16 +391,12 @@ public:
         std::sort(samples, samples + samplesize);
 
         // step 1.5: create splitter trees recursively
-        g_timer.change(TM_MAKE_SPLITTER);
-
         std::vector<SplitterTree*> treelist;
         treelist.push_back(new SplitterTree());
         SplitterTree::Builder(*treelist.back(), samples, samples + samplesize,
                               treelist, strings, depth);
 
         // step 2.2: classify all strings and count bucket sizes
-        g_timer.change(TM_CLASSIFY);
-
         // subtree 0 has exactly n strings, the number of strings in other
         // subtrees is not known yet.
         uint16_t* bktcache = new uint16_t[n];
@@ -503,14 +423,11 @@ public:
                 b = (treelist[t]->*find_bkt)(key);
                 assert(b < bktnum);
 
-                //std::cout << "tree " << t << " -> bkt " << b << "\n";
                 treelist[t]->bktcache.push_back(b);
             }
         }
 
         // step 3: calculate bktsize on all subtrees and prefix sum
-        g_timer.change(TM_PREFIXSUM);
-
         treelist[0]->calc_bktsize_prefixsum(bktcache, n);
 
         for (unsigned int ti = 1; ti < treelist.size(); ++ti)
@@ -520,8 +437,6 @@ public:
         }
 
         // step 4: permute recursively
-        g_timer.change(TM_PERMUTE);
-
         string* sorted = new string[n];
         treelist[0]->recursive_permute(strings, n, bktcache, sorted, treelist);
         delete[] sorted;
@@ -529,17 +444,13 @@ public:
         delete[] bktcache;
 
         // step 5: recursion
-        g_timer.change(TM_GENERAL);
-
         treelist[0]->recursive_sort<find_bkt>(strings, n, treelist, depth);
     }
 };
 
 void bingmann_sample_sortRBTCE(string* strings, size_t n)
 {
-    sample_sort_pre();
     SplitterTree::sort<&SplitterTree::find_bkt_tree_equal>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(bingmann_sample_sortRBTCE, "bingmann/sample_sortRBTCE",
@@ -547,9 +458,7 @@ PSS_CONTESTANT(bingmann_sample_sortRBTCE, "bingmann/sample_sortRBTCE",
 
 void bingmann_sample_sortRBTCEA(string* strings, size_t n)
 {
-    sample_sort_pre();
     SplitterTree::sort<&SplitterTree::find_bkt_tree_asmequal>(strings, n, 0);
-    sample_sort_post();
 }
 
 PSS_CONTESTANT(bingmann_sample_sortRBTCEA, "bingmann/sample_sortRBTCEA",

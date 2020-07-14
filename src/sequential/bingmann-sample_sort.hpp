@@ -64,36 +64,11 @@ static const bool g_toplevel_only = false;
 //! use ?: operator or if in tree descent
 #define SSSS_TERNARY_OP 1
 
-static size_t g_ss_steps, g_rs_steps;
-
 enum {
     TM_GENERAL, TM_MAKE_SAMPLE, TM_MAKE_SPLITTER, TM_CLASSIFY,
     TM_PREFIXSUM, TM_PERMUTE, TM_SMALLSORT
 };
 static TimerArrayDummy g_timer(16);
-
-static inline void sample_sort_pre()
-{
-    g_ss_steps = g_rs_steps = 0;
-    g_timer.clear();
-}
-
-static inline void sample_sort_post()
-{
-    g_stats
-    >> "toplevel_only" << g_toplevel_only
-        >> "l2cache" << l2cache
-        >> "steps_sample_sort" << g_ss_steps
-        >> "steps_base_sort" << g_rs_steps;
-
-    g_stats >> "tm_general" << g_timer.get(TM_GENERAL)
-        >> "tm_make_sample" << g_timer.get(TM_MAKE_SAMPLE)
-        >> "tm_make_splitter" << g_timer.get(TM_MAKE_SPLITTER)
-        >> "tm_classify" << g_timer.get(TM_CLASSIFY)
-        >> "tm_prefixsum" << g_timer.get(TM_PREFIXSUM)
-        >> "tm_permute" << g_timer.get(TM_PERMUTE)
-        >> "tm_smallsort" << g_timer.get(TM_SMALLSORT);
-}
 
 //! method called for recursively sorting "small" sets
 static inline
