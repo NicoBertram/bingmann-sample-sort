@@ -273,9 +273,6 @@ void bingmann_sample_sortBT(string* strings, size_t n)
     sample_sortBT(strings, n, 0);
 }
 
-PSS_CONTESTANT(bingmann_sample_sortBT, "bingmann/sample_sortBT",
-               "bingmann/sample_sortBT (binary tree, no cache)")
-
 // ----------------------------------------------------------------------------
 
 } // namespace bingmann_sample_sortBT

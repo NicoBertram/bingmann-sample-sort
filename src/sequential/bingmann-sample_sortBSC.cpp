@@ -294,20 +294,10 @@ void bingmann_sample_sortBSC_original(string* strings, size_t n)
     sample_sortBSC<find_bkt_binsearch>(strings, n, 0);
 }
 
-PSS_CONTESTANT(
-    bingmann_sample_sortBSC_original,
-    "bingmann/sample_sortBSC_original",
-    "bingmann/sample_sortBSC_original (binary search, bkt cache)")
-
 void bingmann_sample_sortBSCA_original(string* strings, size_t n)
 {
     sample_sortBSC<find_bkt_assembler>(strings, n, 0);
 }
-
-PSS_CONTESTANT(
-    bingmann_sample_sortBSCA_original,
-    "bingmann/sample_sortBSCA_original",
-    "bingmann/sample_sortBSCA_original (binary search, assembler CMOV, bkt cache)")
 
 // ----------------------------------------------------------------------------
 
@@ -373,20 +363,10 @@ void bingmann_sample_sortBSCE_original(string* strings, size_t n)
     bingmann_sample_sortBSC_original::sample_sortBSC<find_bkt_equal>(strings, n, 0);
 }
 
-PSS_CONTESTANT(
-    bingmann_sample_sortBSCE_original,
-    "bingmann/sample_sortBSCE_original",
-    "bingmann/sample_sortBSCE_original (binary search equal, bkt cache)")
-
 void bingmann_sample_sortBSCEA_original(string* strings, size_t n)
 {
     bingmann_sample_sortBSC_original::sample_sortBSC<find_bkt_asmequal>(strings, n, 0);
 }
-
-PSS_CONTESTANT(
-    bingmann_sample_sortBSCEA_original,
-    "bingmann/sample_sortBSCEA_original",
-    "bingmann/sample_sortBSCEA_original (binary search equal, assembler CMOV, bkt cache)")
 
 // ----------------------------------------------------------------------------
 

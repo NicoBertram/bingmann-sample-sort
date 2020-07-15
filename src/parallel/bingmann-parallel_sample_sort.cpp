@@ -36,11 +36,6 @@ parallel_sample_sortBTCUI(string* strings, size_t n)
         UCharStringSet(strings, strings + n), 0);
 }
 
-PSS_CONTESTANT_PARALLEL(
-    parallel_sample_sortBTCUI,
-    "bingmann/parallel_sample_sortBTCUI",
-    "pS5: binary tree, bktcache, unroll tree and strings")
-
 static inline void
 parallel_sample_sortBTCUI_out(string* strings, size_t n)
 {
@@ -56,11 +51,6 @@ parallel_sample_sortBTCUI_out(string* strings, size_t n)
     delete[] output;
 }
 
-PSS_CONTESTANT_PARALLEL(
-    parallel_sample_sortBTCUI_out,
-    "bingmann/parallel_sample_sortBTCUI_out",
-    "pS5: binary tree, bktcache, unroll tree and strings, separate output")
-
 /*----------------------------------------------------------------------------*/
 
 static inline void
@@ -71,11 +61,6 @@ parallel_sample_sortBTCEUA(string* strings, size_t n)
         UCharStringSet(strings, strings + n), 0);
 }
 
-PSS_CONTESTANT_PARALLEL(
-    parallel_sample_sortBTCEUA,
-    "bingmann/parallel_sample_sortBTCEUA",
-    "pS5: binary tree, equality, bktcache, unroll tree")
-
 /*----------------------------------------------------------------------------*/
 
 static inline void
@@ -85,11 +70,6 @@ parallel_sample_sortBTCTUI(string* strings, size_t n)
         bingmann_sample_sort::ClassifyTreeCalcUnrollInterleaveX>(
         UCharStringSet(strings, strings + n), 0);
 }
-
-PSS_CONTESTANT_PARALLEL(
-    parallel_sample_sortBTCTUI,
-    "bingmann/parallel_sample_sortBTCTUI",
-    "pS5: binary tree, bktcache, unroll tree, tree calc")
 
 /******************************************************************************/
 // Parallel Sample Sort with LCP Instantiations
@@ -102,11 +82,6 @@ parallel_sample_sortBTCUI_lcp(string* strings, size_t n)
         UCharStringSet(strings, strings + n), 0);
 }
 
-PSS_CONTESTANT_PARALLEL(
-    parallel_sample_sortBTCUI_lcp,
-    "bingmann/parallel_sample_sortBTCUI_lcp",
-    "pS5: binary tree, bktcache, unroll tree and strings")
-
 /*----------------------------------------------------------------------------*/
 
 static inline void
@@ -117,11 +92,6 @@ parallel_sample_sortBTCEU_lcp(string* strings, size_t n)
         UCharStringSet(strings, strings + n), 0);
 }
 
-PSS_CONTESTANT_PARALLEL(
-    parallel_sample_sortBTCEU_lcp,
-    "bingmann/parallel_sample_sortBTCEU_lcp",
-    "pS5: binary tree, equality, bktcache, unroll tree")
-
 /*----------------------------------------------------------------------------*/
 
 static inline void
@@ -131,11 +101,6 @@ parallel_sample_sortBTCTUI_lcp(string* strings, size_t n)
         bingmann_sample_sort::ClassifyTreeCalcUnrollInterleaveX>(
         UCharStringSet(strings, strings + n), 0);
 }
-
-PSS_CONTESTANT_PARALLEL(
-    parallel_sample_sortBTCTUI_lcp,
-    "bingmann/parallel_sample_sortBTCTUI_lcp",
-    "pS5: binary tree, bktcache, unroll tree, tree calc")
 
 } // namespace bingmann_parallel_sample_sort
 

@@ -39,9 +39,6 @@
 
 #include <tbb/concurrent_queue.h>
 
-#include "../tools/agglogger.hpp"
-#include "../tools/timer.hpp"
-#include "../tools/timer_array.hpp"
 #include "../tools/globals.hpp"
 
 namespace jobqueue {
@@ -104,21 +101,6 @@ private:
     //! number of this JobQueue in JobQueueGroup
     unsigned m_id;
 
-    //! SizeLogger or a dummy class
-    typedef AggregateLogger<unsigned int> IntLogger;
-    //typedef IntLogger::LockingAverageLogger logger_type;
-    typedef IntLogger::DummyLogger logger_type;
-
-    logger_type m_logger, m_work_logger;
-
-public:
-    typedef TimerArrayDummy TimerArrayMT;
-
-    enum { TM_WORK, TM_IDLE };
-
-    //! TimerArray for measing working and idle time (or a dummy class)
-    TimerArrayMT m_timers;
-
 public:
     JobQueueT(cookie_type& cookie,
               jobqueuegroup_type* group)
@@ -126,10 +108,7 @@ public:
           m_numthrs(0),
           m_idle_count(0),
           m_cookie(cookie),
-          m_group(group),
-          m_logger("jobqueue.txt", 0.005, 10000),
-          m_work_logger("worker_count.txt", 0.005, 10000),
-          m_timers(2)
+          m_group(group)
     { }
 
     bool has_idle() const
@@ -140,7 +119,6 @@ public:
     void enqueue(job_type* job)
     {
         m_queue.push(job);
-        m_logger << m_queue.unsafe_size();
     }
 
     void set_id(unsigned id)
@@ -157,8 +135,6 @@ public:
         if (!m_queue.try_pop(job))
             return (m_idle_count != m_numthrs);
 
-        m_logger << m_queue.unsafe_size();
-
         if (job->run(m_cookie))
             delete job;
 
@@ -170,34 +146,19 @@ public:
         job_type* job = NULL;
         m_numthrs = omp_get_num_threads();
 
-        m_timers.change(TM_WORK);
-        m_logger.start();
-        m_work_logger.start();
-
         while (true)
         {
             while (m_queue.try_pop(job))
             {
-                m_logger << m_queue.unsafe_size();
-
                 if (job->run(m_cookie))
                     delete job;
             }
 
-            LOGC(debug_queue) << "Queue" << m_id << " is empty";
-
             // no more jobs -> switch to idle
-            m_timers.change(TM_IDLE);
             ++m_idle_count;
-
-            m_logger << m_queue.unsafe_size();
-            m_work_logger << (m_numthrs - m_idle_count);
 
             while (!m_queue.try_pop(job))
             {
-                LOGC(debug_queue)
-                    << "Idle thread - m_idle_count: " << m_idle_count;
-
                 if ( //!m_group->assist(m_id) &&
                     m_idle_count == m_numthrs)
                 {
@@ -208,11 +169,7 @@ public:
             }
 
             // got a new job -> not idle anymore
-            m_timers.change(TM_WORK);
             --m_idle_count;
-
-            m_logger << m_queue.unsafe_size();
-            m_work_logger << (m_numthrs - m_idle_count);
 
             if (job->run(m_cookie))
                 delete job;
@@ -221,7 +178,6 @@ public:
 
     void loop()
     {
-        m_timers.start(omp_get_max_threads());
         m_idle_count = 0;
 
 #pragma omp parallel
@@ -236,15 +192,12 @@ public:
             executeThreadWork();
         }   // end omp parallel
 
-        m_timers.stop();
 
         assert(m_queue.unsafe_size() == 0);
     }
 
     void numaLoop(int numaNode, int numberOfThreads)
     {
-        m_timers.start(omp_get_max_threads());
-
 #pragma omp parallel num_threads(numberOfThreads)
         {
             // tie thread to a NUMA node
@@ -253,8 +206,6 @@ public:
 
             executeThreadWork();
         }   // end omp parallel
-
-        m_timers.stop();
 
         assert(m_queue.unsafe_size() == 0);
     }
@@ -313,8 +264,6 @@ public:
         int nodeThreads = numThreadsPerNode;
         if (k < remainThreads) nodeThreads++; // distribute extra threads
 
-        LOG1 << "JobQueue[" << k << "] prospective " << nodeThreads << " threads";
-
         return nodeThreads;
     }
 
@@ -325,21 +274,6 @@ public:
         int realNumaNodes = numa_num_configured_nodes();
         if (realNumaNodes < 1) realNumaNodes = 1;
 
-        if (realNumaNodes == 1) {
-            LOG1 << "No or just one NUMA nodes detected on the system.";
-            LOG1 << "Continuing anyway, at your own peril!";
-        }
-
-        g_stats >> "num_real_numa_nodes" << realNumaNodes;
-
-        if ((int)m_queues.size() != realNumaNodes || g_numa_nodes == 0)
-        {
-            LOG1 << "!!! WARNING !!! emulating NUMA nodes! "
-                 << "Remove --numa-nodes for REAL EXPERIMENTS.";
-        }
-
-        g_stats >> "num_jobqueues" << m_queues.size();
-
         // distribute threads among NUMA job queues
         int numJobQueues = m_queues.size();
         int numThreadsPerNode = omp_get_max_threads() / numJobQueues;
@@ -347,9 +281,6 @@ public:
 
         if (numThreadsPerNode == 0)
         {
-            LOG1 << "Fewer threads than NUMA nodes detected.";
-            LOG1 << "Strange things may happen, continuing anyway, at your own peril!";
-
             // We will start fewer threads than JobQueues, and wait for the
             // first to finish, which will then assist the JobQueues without
             // threads.
@@ -361,8 +292,6 @@ public:
 
         omp_set_nested(true); // enable nested parallel regions
 
-        ClockTimer timer;
-
 #pragma omp parallel for num_threads(runThreads) schedule(dynamic)
         for (int k = 0; k < numJobQueues; k++)
         {
@@ -370,15 +299,9 @@ public:
             int numaNode = k % realNumaNodes;
             if (k < remainThreads) nodeThreads++; // distribute extra threads
 
-            LOG1 << "JobQueue[" << k << "] gets " << nodeThreads << " threads";
-
             if (nodeThreads == 0) nodeThreads = 1;
 
-            ClockTimer timer;
-
             m_queues[k]->numaLoop(numaNode, nodeThreads);
-
-            LOG1 << "JobQueue[" << k << "] took : " << timer.elapsed() << " s";
         }
     }
 
@@ -391,12 +314,6 @@ public:
         {
             // go through queues round-robin starting at own
             if (++id >= m_queues.size()) id = 0;
-
-            if (m_queues[id]->try_run())
-            {
-                LOGC(debug_queue) << "JobQueue[" << qid << "] assisted " << id;
-                return true;
-            }
         }
 
         return false;

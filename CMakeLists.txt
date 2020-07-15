@@ -34,10 +34,7 @@ endif()
 
 option(BUILD_ALL "Build different test programs" OFF)
 
-option(WITH_MALLOC_COUNT "Use malloc_count for memory profiling" OFF)
-
-option(PSS_BINARY "build project as parallel-string-sorting benchmarking tool" ON)
-option(PSS_STATIC "build parallel-string-sorting static library" OFF)
+option(PSS_STATIC "build parallel-string-sorting static library" ON)
 option(PSS_SHARED "build parallel-string-sorting shared library" OFF)
 
 # Enable warnings

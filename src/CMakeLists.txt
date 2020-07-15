@@ -19,50 +19,6 @@ set(PSSLIB_SOURCES
   parallel/bingmann-parallel_sample_sort.cpp
   )
 
-set(PSSBIN_SOURCES
-  psstest.cpp
-  ${PSSLIB_SOURCES}
-  )
-
-set(PSSBIN_LIBRARIES ${TBB_LIBRARIES} ${GMP_LIBRARIES} ${NUMA_LIBRARIES} tlx rt dl)
-
-set(PSSBIN_LIBRARIES ${PSSBIN_LIBRARIES} CACHE STRING "Pssbin Libraries" FORCE)
-
-if(WITH_MALLOC_COUNT)
-
-  add_definitions(-DMALLOC_COUNT)
-  list(APPEND PSSBIN_SOURCES
-    tools/malloc_count.c
-    tools/stack_count.c
-  )
-
-endif(WITH_MALLOC_COUNT)
-
-# build benchmark binary from sources (without library)
-if(PSS_BINARY)
-
-  add_executable(psstest ${PSSBIN_SOURCES})
-  target_link_libraries(psstest ${PSSBIN_LIBRARIES})
-
-  # enable compilation of hooks for pss contest list
-  set_property(TARGET psstest
-    PROPERTY COMPILE_DEFINITIONS "PSS_CONTEST=1")
-
-  if(BUILD_ALL)
-    # build parallel string sorting with additional parameters
-
-    foreach(BPARAM 512 1024 2048 4096 8192 16384 32768 65536 131072 262144 524288 1048576)
-
-      add_executable(psstest-${BPARAM} ${PSSBIN_SOURCES})
-      target_link_libraries(psstest-${BPARAM} ${PSSBIN_LIBRARIES})
-      set_property(TARGET psstest-${BPARAM} PROPERTY COMPILE_DEFINITIONS "BPARAM=${BPARAM}")
-
-    endforeach(BPARAM)
-
-  endif(BUILD_ALL)
-
-endif(PSS_BINARY)
-
 # build parallel string sorting static library from sources (possibly again)
 if(PSS_STATIC)
 
@@ -86,11 +42,5 @@ if(PSS_SHARED)
     SOVERSION "${PSSLIB_SOVERSION}")
 
 endif()
-
-# silence some warnings from legacy code
-set_property(SOURCE sinha-copy-burstsort/glue.cpp
-  PROPERTY COMPILE_FLAGS "-Wno-write-strings -Wno-unused-parameter -Wno-unused-but-set-variable -Wno-sign-compare -Wno-sequence-point -Wno-uninitialized")
-set_property(SOURCE parallel/shamsundar-lcp-merge-string-sort.cpp
-  PROPERTY COMPILE_FLAGS "-Wno-sign-compare")
 
 ################################################################################

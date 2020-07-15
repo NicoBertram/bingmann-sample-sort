@@ -26,7 +26,6 @@
 #include <cstring>
 
 #include "../tools/stringtools.hpp"
-#include "../tools/contest.hpp"
 #include <tlx/die.hpp>
 
 namespace bingmann {

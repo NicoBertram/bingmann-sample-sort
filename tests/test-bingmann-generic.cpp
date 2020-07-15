@@ -23,11 +23,8 @@
 #include <sequential/inssort.hpp>
 #include <sequential/bingmann-lcp_inssort.hpp>
 #include <sequential/bingmann-radix_sort.hpp>
-#include <sequential/bingmann-mkqs.hpp>
 #include <sequential/bingmann-sample_sort.hpp>
-#include <parallel/bingmann-parallel_mkqs.hpp>
 #include <parallel/bingmann-parallel_sample_sort.hpp>
-#include <parallel/bingmann-parallel_radix_sort.hpp>
 #include <tools/stringset.hpp>
 #include <tools/lcgrandom.hpp>
 
@@ -69,7 +66,6 @@ void TestUCharString(const char* name,
     // run sorting algorithm
     UCharStringSet ss(cstrings, cstrings + nstrings);
     algo(ss, 0);
-    if (0) ss.print();
 
     // check result
     if (!ss.check_order()) {
@@ -110,7 +106,6 @@ void TestVectorString(const char* name,
     // run sorting algorithm
     VectorStringSet ss(strings.begin(), strings.end());
     algo(ss, 0);
-    if (0) ss.print();
 
     // check result
     if (!ss.check_order()) {
@@ -148,7 +143,6 @@ void TestVectorPtrString(
     // run sorting algorithm
     VectorPtrStringSet ss(strings.begin(), strings.end());
     algo(ss, 0);
-    if (0) ss.print();
 
     // check result
     if (!ss.check_order()) {
@@ -182,7 +176,6 @@ void TestUCharSuffixString(
 
     // run sorting algorithm
     algo(ss, 0);
-    if (0) ss.print();
 
     // check result
     if (!ss.check_order()) {
@@ -211,7 +204,6 @@ void TestStringSuffixString(
 
     // run sorting algorithm
     algo(ss, 0);
-    if (0) ss.print();
 
     // check result
     if (!ss.check_order()) {
@@ -235,17 +227,7 @@ void test_all(const size_t nstrings)
 {
     if (nstrings <= 1024) {
         run_tests(inssort::inssort_generic);
-        run_tests(bingmann::lcp_insertion_sort_verify);
-        run_tests(bingmann::lcp_insertion_sort_pseudocode_verify);
-        run_tests(bingmann::lcp_insertion_sort_cache_verify);
     }
-    run_tests(bingmann::mkqs_generic);
-    run_tests(bingmann::msd_CE0_generic);
-    run_tests(bingmann::msd_CI2_generic);
-    run_tests(bingmann_parallel_radix_sort::parallel_radix_sort_8bit_generic);
-    run_tests(bingmann_parallel_radix_sort::parallel_radix_sort_16bit_generic);
-    run_tests(bingmann_parallel_mkqs::bingmann_sequential_mkqs_cache8);
-    run_tests(bingmann_parallel_mkqs::bingmann_parallel_mkqs);
     run_tests(bingmann_parallel_sample_sort::parallel_sample_sort_base);
     run_tests(bingmann_parallel_sample_sort::parallel_sample_sort_out_test);
     run_tests(bingmann_parallel_sample_sort::parallel_sample_sort_lcp_verify);

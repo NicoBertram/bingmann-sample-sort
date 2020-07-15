@@ -33,7 +33,6 @@
 #include <algorithm>
 
 #include "../tools/lcgrandom.hpp"
-#include "../tools/contest.hpp"
 #include "../tools/stringtools.hpp"
 #include "../tools/jobqueue.hpp"
 #include "../tools/lockfree.hpp"
@@ -47,8 +46,6 @@
 #include "../sequential/bingmann-sample_sortBTCT.hpp"
 
 #include <tlx/string/hexdump.hpp>
-#include <tlx/meta/log2.hpp>
-#include <tlx/logger.hpp>
 #include <tlx/die.hpp>
 
 namespace bingmann_parallel_sample_sort {
@@ -105,15 +102,6 @@ static const size_t g_inssort_threshold = 32;
 
 typedef uint64_t key_type;
 
-//! step timer ids for different sorting steps
-enum { TM_WAITING, TM_PARA_SS, TM_SEQ_SS, TM_MKQS, TM_INSSORT };
-
-//! replace TimerArrayMT with a no-op implementation
-#ifndef TIMERARRAY_REAL
-typedef ::TimerArrayDummy TimerArrayMT;
-typedef ::ScopedTimerKeeperDummy ScopedTimerKeeperMT;
-#endif
-
 // ****************************************************************************
 // *** Global Parallel Super Scalar String Sample Sort Context
 
@@ -138,9 +126,6 @@ public:
     //! counters
     size_t para_ss_steps, seq_ss_steps, bs_steps;
 
-    //! timers for individual sorting steps
-    TimerArrayMT timers;
-
     //! type of job queue group (usually a No-Op Class)
     typedef JobQueueGroupType<Context> jobqueuegroup_type;
 
@@ -156,7 +141,6 @@ public:
     //! context constructor
     Context(jobqueuegroup_type* jqg = NULL)
         : para_ss_steps(0), seq_ss_steps(0), bs_steps(0),
-          timers(16),
           jobqueue(*this, jqg)
     { }
 
@@ -512,8 +496,6 @@ public:
 
     bool run(Context& ctx) final
     {
-        ScopedTimerKeeperMT tm_seq_ss(ctx.timers, TM_SEQ_SS);
-
         size_t n = in_strptr.size();
 
         thrid = PS5_ENABLE_RESTSIZE ? omp_get_thread_num() : 0;
@@ -984,12 +966,9 @@ public:
 
     void sort_mkqs_cache(Context& ctx, const StringPtr& strptr, size_t depth)
     {
-        ScopedTimerKeeperMT tm_mkqs(ctx.timers, TM_MKQS);
-
         if (!enable_sequential_mkqs ||
             strptr.size() < g_inssort_threshold) {
 
-            ScopedTimerKeeperMT tm_inssort(ctx.timers, TM_INSSORT);
             insertion_sort(strptr.copy_back(), depth);
             ctx.donesize(strptr.size(), thrid);
             return;
@@ -1021,7 +1000,6 @@ public:
                 if (ms.num_lt == 0)
                     ;
                 else if (ms.num_lt < g_inssort_threshold) {
-                    ScopedTimerKeeperMT tm_inssort(ctx.timers, TM_INSSORT);
                     insertion_sort_cache<false>(ms.strptr.sub(0, ms.num_lt),
                                                 ms.cache, ms.depth);
                     ctx.donesize(ms.num_lt, thrid);
@@ -1050,7 +1028,6 @@ public:
                     ctx.donesize(spb.size(), thrid);
                 }
                 else if (ms.num_eq < g_inssort_threshold) {
-                    ScopedTimerKeeperMT tm_inssort(ctx.timers, TM_INSSORT);
                     insertion_sort_cache<true>(sp, ms.cache + ms.num_lt,
                                                ms.depth + sizeof(key_type));
                     ctx.donesize(ms.num_eq, thrid);
@@ -1070,7 +1047,6 @@ public:
                 if (ms.num_gt == 0)
                     ;
                 else if (ms.num_gt < g_inssort_threshold) {
-                    ScopedTimerKeeperMT tm_inssort(ctx.timers, TM_INSSORT);
                     insertion_sort_cache<false>(sp, ms.cache + ms.num_lt + ms.num_eq,
                                                 ms.depth);
                     ctx.donesize(ms.num_gt, thrid);
@@ -1224,8 +1200,6 @@ public:
 
         bool run(Context& ctx) final
         {
-            ScopedTimerKeeperMT tm_seq_ss(ctx.timers, TM_PARA_SS);
-
             step->sample(ctx);
             return true;
         }
@@ -1241,8 +1215,6 @@ public:
 
         bool run(Context& ctx) final
         {
-            ScopedTimerKeeperMT tm_seq_ss(ctx.timers, TM_PARA_SS);
-
             step->count(p, ctx);
             return true;
         }
@@ -1258,8 +1230,6 @@ public:
 
         bool run(Context& ctx) final
         {
-            ScopedTimerKeeperMT tm_seq_ss(ctx.timers, TM_PARA_SS);
-
             step->distribute(p, ctx);
             return true;
         }
@@ -1475,16 +1445,6 @@ public:
         if (pstep) pstep->substep_notify_done();
         delete this;
     }
-
-    static inline void put_stats()
-    {
-        g_stats >> "l2cache" << size_t(l2cache)
-            >> "splitter_treebits" << size_t(treebits)
-            >> "numsplitters" << size_t(numsplitters)
-            >> "use_work_sharing" << use_work_sharing
-            >> "use_restsize" << PS5_ENABLE_RESTSIZE
-            >> "use_lcp_inssort" << use_lcp_inssort;
-    }
 };
 
 template <template <size_t> class Classify, typename Context, typename StringPtr>
@@ -1527,34 +1487,12 @@ void parallel_sample_sort(const StringPtr& strptr, size_t depth)
 #endif
     ctx.threadnum = omp_get_max_threads();
 
-    SampleSortStep<SContext, Classify, StringPtr>::put_stats();
-
-    ctx.timers.start(ctx.threadnum);
-
     Enqueue<Classify>(ctx, NULL, strptr, depth);
     ctx.jobqueue.loop();
-
-    ctx.timers.stop();
 
 #if PS5_ENABLE_RESTSIZE
     assert(!PS5_ENABLE_RESTSIZE || ctx.restsize.update().get() == 0);
 #endif
-
-    g_stats >> "steps_para_sample_sort" << ctx.para_ss_steps
-        >> "steps_seq_sample_sort" << ctx.seq_ss_steps
-        >> "steps_base_sort" << ctx.bs_steps;
-
-    if (ctx.timers.is_real)
-    {
-        g_stats >> "tm_waiting" << ctx.timers.get(TM_WAITING)
-            >> "tm_jq_work" << ctx.jobqueue.m_timers.get(ctx.jobqueue.TM_WORK)
-            >> "tm_jq_idle" << ctx.jobqueue.m_timers.get(ctx.jobqueue.TM_IDLE)
-            >> "tm_para_ss" << ctx.timers.get(TM_PARA_SS)
-            >> "tm_seq_ss" << ctx.timers.get(TM_SEQ_SS)
-            >> "tm_mkqs" << ctx.timers.get(TM_MKQS)
-            >> "tm_inssort" << ctx.timers.get(TM_INSSORT)
-            >> "tm_sum" << ctx.timers.get_sum();
-    }
 }
 
 //! call Sample Sort on a generic StringSet, this allocates the shadow array for
@@ -1706,10 +1644,6 @@ void parallel_sample_sort_numa(string* strings, size_t n,
 #if PS5_ENABLE_RESTSIZE
     assert(ctx.restsize.update().get() == 0);
 #endif
-
-    g_stats >> "steps_para_sample_sort" << ctx.para_ss_steps
-        >> "steps_seq_sample_sort" << ctx.seq_ss_steps
-        >> "steps_base_sort" << ctx.bs_steps;
 }
 
 //! Call for NUMA aware parallel sorting
@@ -1753,10 +1687,6 @@ void parallel_sample_sort_numa2(const UCharStringShadowLcpCacheOutPtr* strptr,
 #if PS5_ENABLE_RESTSIZE
         assert(ctx[i].restsize.update().get() == 0);
 #endif
-
-        g_stats >> "steps_para_sample_sort" << ctx[i]->para_ss_steps
-            >> "steps_seq_sample_sort" << ctx[i]->seq_ss_steps
-            >> "steps_base_sort" << ctx[i]->bs_steps;
 
         delete ctx[i];
     }

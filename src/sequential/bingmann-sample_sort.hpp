@@ -24,15 +24,12 @@
 #define PSS_SRC_SEQUENTIAL_BINGMANN_SAMPLE_SORT_HEADER
 
 #include "../tools/stringtools.hpp"
-#include "../tools/timer_array.hpp"
-#include "../tools/stats_writer.hpp"
 #include "../tools/globals.hpp"
 #include "../tools/lcgrandom.hpp"
 #include "bingmann-radix_sort.hpp"
 
 #include <tlx/string/hexdump.hpp>
 #include <tlx/meta/log2.hpp>
-#include <tlx/logger.hpp>
 
 #include <algorithm>
 
@@ -63,12 +60,6 @@ static const bool g_toplevel_only = false;
 
 //! use ?: operator or if in tree descent
 #define SSSS_TERNARY_OP 1
-
-enum {
-    TM_GENERAL, TM_MAKE_SAMPLE, TM_MAKE_SPLITTER, TM_CLASSIFY,
-    TM_PREFIXSUM, TM_PERMUTE, TM_SMALLSORT
-};
-static TimerArrayDummy g_timer(16);
 
 //! method called for recursively sorting "small" sets
 static inline

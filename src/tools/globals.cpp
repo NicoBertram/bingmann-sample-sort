@@ -23,8 +23,6 @@
 
 #include "globals.hpp"
 
-stats_writer g_stats;
-
 int g_num_threads = 0;
 
 // number of NUMA nodes (may be faked by cmdline)

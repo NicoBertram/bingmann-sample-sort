@@ -26,9 +26,6 @@
 
 #include <string>
 #include <cstdlib>
-#include "stats_writer.hpp"
-
-extern stats_writer g_stats;
 
 extern int g_num_threads;
 

@@ -990,15 +990,11 @@ verify_lcp_cache(
     {
         if (lcps[0] != expectedFirstLcp)
         {
-            LOG1 << "lcp[0] = " << lcps[0]
-                 << " excepted " << expectedFirstLcp;
             allValid = false;
         }
         if (checkCache && expectedFirstLcp != 42 &&
             *cache != ss.get_char(ss[begin], lcps[0]))
         {
-            LOG1 << "cache[0] = " << cache[0]
-                 << " excepted " << ss.get_char(ss[begin], lcps[0]);
             allValid = false;
         }
     }
@@ -1012,20 +1008,13 @@ verify_lcp_cache(
 
         if (h != lcps[i])
         {
-            LOG1 << "lcp[" << i << "] = " << lcps[i]
-                 << " excepted " << h;
             allValid = false;
         }
         if (checkCache && cache[i] != ss.get_char(s2, lcps[i]))
         {
-            LOG1 << "cache[" << i << "] = " << cache[i]
-                 << " excepted " << ss.get_char(s2, lcps[i]);
             allValid = false;
         }
     }
-
-    if (!allValid)
-        LOG1 << "Found invalid LCPS and/or cache values!";
 
     return allValid;
 }

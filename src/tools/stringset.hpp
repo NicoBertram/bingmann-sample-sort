@@ -41,8 +41,6 @@
 #include <vector>
 #include <memory>
 
-#include <tlx/logger.hpp>
-
 namespace parallel_string_sorting {
 
 typedef uintptr_t lcp_t;
@@ -490,16 +488,6 @@ public:
 
     //! \}
 
-    void print() const
-    {
-        size_t i = 0;
-        for (Iterator pi = begin(); pi != end(); ++pi)
-        {
-            LOG1 << "[" << i++ << "] = " << *pi
-                 << " = " << get_string(*pi, 0);
-        }
-    }
-
 protected:
     //! array of string pointers
     Iterator begin_, end_;
@@ -587,16 +575,6 @@ public:
         : begin_(c.begin()), end_(c.end())
     { }
 
-    void print() const
-    {
-        size_t i = 0;
-        for (Iterator pi = begin(); pi != end(); ++pi)
-        {
-            LOG1 << "[" << i++ << "] = " << *pi
-                 << " = " << get_string(*pi, 0);
-        }
-    }
-
 protected:
     //! vector of std::string objects
     Iterator begin_, end_;
@@ -680,16 +658,6 @@ public:
     explicit VectorPtrStringSet(Container& c)
         : begin_(c.begin()), end_(c.end())
     { }
-
-    void print() const
-    {
-        size_t i = 0;
-        for (Iterator pi = begin(); pi != end(); ++pi)
-        {
-            LOG1 << "[" << i++ << "] = " << pi->get()
-                 << " = " << get_string(*pi, 0);
-        }
-    }
 
 protected:
     //! vector of std::string objects
@@ -784,16 +752,6 @@ public:
         : text_(std::get<0>(c)), text_end_(std::get<1>(c)),
           begin_(std::get<2>(c)), end_(std::get<2>(c) + std::get<3>(c))
     { }
-
-    void print() const
-    {
-        size_t i = 0;
-        for (Iterator pi = begin(); pi != end(); ++pi)
-        {
-            LOG1 << "[" << i++ << "] = " << *pi
-                 << " = " << get_string(*pi, 0);
-        }
-    }
 
 protected:
     //! reference to base text
@@ -898,16 +856,6 @@ public:
         : text_(&std::get<0>(c)),
           begin_(std::get<1>(c).begin()), end_(std::get<1>(c).end())
     { }
-
-    void print() const
-    {
-        size_t i = 0;
-        for (Iterator pi = begin(); pi != end(); ++pi)
-        {
-            LOG1 << "[" << i++ << "] = " << *pi
-                 << " = " << get_string(*pi, 0);
-        }
-    }
 
 protected:
     //! reference to base text

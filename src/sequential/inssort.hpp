@@ -21,7 +21,6 @@
 #ifndef INSSORT_H_
 #define INSSORT_H_
 
-#include "../tools/contest.hpp"
 #include "../tools/stringset.hpp"
 #include <tlx/define/likely.hpp>
 
