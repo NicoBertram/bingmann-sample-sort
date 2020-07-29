@@ -40,6 +40,7 @@
 #include <stdint.h>
 #include <vector>
 #include <memory>
+#include <string>
 
 namespace parallel_string_sorting {
 
