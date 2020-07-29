@@ -36,6 +36,7 @@ option(BUILD_ALL "Build different test programs" OFF)
 
 option(PSS_STATIC "build parallel-string-sorting static library" ON)
 option(PSS_SHARED "build parallel-string-sorting shared library" OFF)
+option(PSS_TEST "build parallel-string-sorting tests" OFF)
 
 # Enable warnings
 
